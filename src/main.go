@@ -152,7 +152,6 @@ func execute_statement(statement *Statement , table *tableds.Table)(ExecuteResul
     }
     return EXECUTE_FAIL
 }
-
 // if the table current num row is alredy greater then return an error
 //logic: figure out where to save (which page to save the data) 
 //in the page (find the current page number)
@@ -169,16 +168,16 @@ func execute_insert(statement *Statement , table *(tableds.Table))(ExecuteResult
 	// Get the address of the row
     /*
 	// Find the page number and the specific position of the row
-	page_number := table.Num_rows / ROWS_PER_PAGE
-	page := table.Pager.Pages[page_number]
+
     */
-    page_number := table.Num_rows / ROWS_PER_PAGE
-    page := get_page(table.Pager , page_number)
+    //page_number := table.Num_rows / ROWS_PER_PAGE
+    //page := get_page(table.Pager , page_number)
     
 
 	// Find the remainder by calculating the row size and get the address of that row
-	row_offset := table.Num_rows % ROWS_PER_PAGE
-	row_address := page[row_offset*ROW_SIZE:]
+	//row_offset := table.Num_rows % ROWS_PER_PAGE
+    cursor := table_end(table)
+	row_address := cursor_value(cursor)
 	copy(row_address, data)
 	// Increment the number of rows
 	table.Num_rows += 1
@@ -190,6 +189,7 @@ func execute_insert(statement *Statement , table *(tableds.Table))(ExecuteResult
 //This function is used for select operation (currently you can only select all from the database)
 //the logic is: 
 /*
+    //the cursor will first point to the value and ten deserialize the row
     parameter: statement , table
     return EXECUTE RESULT
     what i want is to get the address of place i want to read (in this case every page)
@@ -202,15 +202,10 @@ func execute_insert(statement *Statement , table *(tableds.Table))(ExecuteResult
     
 */
 func execute_select(statement *Statement , table *tableds.Table)(ExecuteResult){
-    //fmt.Printf("" , table.Num_rows)
-    for i := 0; i < int(table.Num_rows); i++ {
-        page_number := table.Num_rows / ROWS_PER_PAGE
-        page := get_page(table.Pager , page_number)
-
-        row_offset := uint32(i) % ROWS_PER_PAGE
-        row_address := page[row_offset*ROW_SIZE : row_offset*ROW_SIZE+ROW_SIZE-1]
-
-        data, _ := deserializeRow(row_address)
+    cursor := table_stat(table)
+    for cursor.end_of_table != true {
+        data, _ := deserializeRow(cursor_value(cursor))
+        cursor_advance(cursor)
         print_row(data)
     }
     return EXECUTE_SUCCESS
@@ -369,14 +364,60 @@ func pager_flush(pager tableds.Pager , page_num uint32 ,size uint32){
 }
 
 /*
-    cursor function 
+    cursor function : represent the location in the table
     cursor at the beginning of the table
     cursor at the end of the table 
     access to the place where your cursor is pointing to 
     access the cursor to the next row (dynamic pointer)
+
+    purpose: delete the row pointed to by a cursor 
+    Modify a row pointed by a cursor
+    Search a table by a given id    
 */
 type Cursor struct{
+    table *tableds.Table
+    row_num uint32
+    end_of_table bool
+}
 
+//return a cursor that the where 
+func table_stat(table *tableds.Table)(*Cursor){
+    cursor := &Cursor{
+        table: table,
+        row_num: 0,
+        end_of_table: (table.Num_rows == 0),
+    }
+    return cursor
+}
+
+//return a cursor to the table end
+func table_end(table *tableds.Table)(*Cursor){
+    cursor := &Cursor{
+        table: table,
+        row_num: table.Num_rows,   
+        end_of_table: true,
+    }
+    return cursor
+}
+
+//calculate the place for the curosr
+func cursor_value(cursor *Cursor)([]byte){
+    row_num := cursor.row_num
+    page_num := row_num/ROWS_PER_PAGE
+
+    page := get_page(cursor.table.Pager , page_num)
+
+    row_offset := row_num%ROWS_PER_PAGE
+    bytes_offset := row_offset*ROW_SIZE
+
+    return page[bytes_offset:row_offset*ROW_SIZE+ROW_SIZE-1]
+}
+
+func cursor_advance(cursor *Cursor){
+    cursor.row_num += 1 
+    if(cursor.row_num >= cursor.table.Num_rows){
+        cursor.end_of_table = true
+    }
 }
 
 /*
@@ -390,7 +431,7 @@ type Cursor struct{
 func main(){
     input_buffer := new_input_buffer()
     if(len(os.Args)) <2 {
-        fmt.Println("Please supply a database filename")
+        fmt.Println("Please supply a database filename uwu")
         os.Exit(1)
     }
     filename := os.Args[1]
@@ -428,4 +469,3 @@ func main(){
             fmt.Printf("Executed \n")
         }    
 }
-
