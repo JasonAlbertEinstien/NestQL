@@ -8,7 +8,6 @@ import (
 	"os"
 	"strings"
 	"syscall"
-	"unsafe"
 
 	tableds "nestdb/internal/table"
 )
@@ -24,8 +23,7 @@ import (
 */
 //
 func pager_open(Filename string)(*tableds.Pager){
-    f, err := os.OpenFile(Filename , os.O_RDWR|os.O_CREATE , 0777)
-    
+    f, err := os.OpenFile(Filename , os.O_RDWR|os.O_CREATE, syscall.S_IWUSR | syscall.S_IRUSR)   
     if err != nil{
         fmt.Println("ERROR OF OPEN THE DB FILE OR CREATING THE FILE")
     }
@@ -46,27 +44,19 @@ func pager_open(Filename string)(*tableds.Pager){
     return pager
 }
 
-/**/
-
-func sizeOfAttribute(Struct interface{} , Attribute interface{})(uint32){
-    return uint32(unsafe.Sizeof(Attribute))
-}
 
 //this part will create a new table and return a pointer point to table
 
 func db_open(filename string) *tableds.Table {
     pager := pager_open(filename)
+    //this pager should be nil
+    var num_rows uint32 = pager.File_length/ROW_SIZE
 	table := &tableds.Table{
         Pager: pager,
-	}
-	for i := range table.Pager.Pages {
-        page := &tableds.Page{}
-		table.Pager.Pages[i] = page
+        Num_rows: num_rows,
 	}
 	return table
 }
-
-
 
 //replace this with db_opne
 
@@ -173,13 +163,18 @@ func execute_insert(statement *Statement , table *(tableds.Table))(ExecuteResult
 		return EXECUTE_FAIL
 	}
 
-	// Get the address of the row
-	row_to_insert := &(statement.row_to_insert)
+    row_to_insert := &(statement.row_to_insert)
 	data, _ := serializeRow(row_to_insert)
 
+	// Get the address of the row
+    /*
 	// Find the page number and the specific position of the row
 	page_number := table.Num_rows / ROWS_PER_PAGE
 	page := table.Pager.Pages[page_number]
+    */
+    page_number := table.Num_rows / ROWS_PER_PAGE
+    page := get_page(table.Pager , page_number)
+    
 
 	// Find the remainder by calculating the row size and get the address of that row
 	row_offset := table.Num_rows % ROWS_PER_PAGE
@@ -207,11 +202,14 @@ func execute_insert(statement *Statement , table *(tableds.Table))(ExecuteResult
     
 */
 func execute_select(statement *Statement , table *tableds.Table)(ExecuteResult){
+    //fmt.Printf("" , table.Num_rows)
     for i := 0; i < int(table.Num_rows); i++ {
-        page_number := uint32(i) / ROWS_PER_PAGE
-        page := table.Pager.Pages[page_number]
+        page_number := table.Num_rows / ROWS_PER_PAGE
+        page := get_page(table.Pager , page_number)
+
         row_offset := uint32(i) % ROWS_PER_PAGE
         row_address := page[row_offset*ROW_SIZE : row_offset*ROW_SIZE+ROW_SIZE-1]
+
         data, _ := deserializeRow(row_address)
         print_row(data)
     }
@@ -269,25 +267,33 @@ func read_input(input_Buffer *InputBuffer){
 */
 
 //get that specific postion from the page
+/*
+    This section have bug ! Please be aware 
+*/
 func get_page(pager *tableds.Pager ,page_num uint32)*tableds.Page{
     //if page number > the size --> exit the os.exit()
     if(page_num > TABLE_MAX_PAGES){
         fmt.Println("EPIC FAIL YOU TRY TO ACCESS MORE THAN TLBLE MAXPAGE")
         os.Exit(1)
-    }
-
+    }   
+//    fmt.Printf("INLOOP")
+    //if that page is not being fetched before 
     if(pager.Pages[page_num] == nil){
+        //create a new pointer for one page 
         page := new(tableds.Page)
         num_pages := pager.File_length/PAGE_SIZE
 
+        if (pager.File_length % PAGE_SIZE != 0){
+            num_pages += 1
+        }
         if(page_num <= num_pages){
-            //seek and set the file descriptor to the position of that page --> 0 means starting from 0
+
+            //bug exit here : 
             _, err := syscall.Seek(pager.File_descriptor , int64(page_num*PAGE_SIZE) , 0)
             if err != nil{
                 fmt.Printf("ERROR SEEKING FILE \n")
                 os.Exit(1)
             }
-
             //the read and return to the byte
             bytesRead , err := syscall.Read(pager.File_descriptor , page[:])
             if err != nil {
@@ -301,7 +307,6 @@ func get_page(pager *tableds.Pager ,page_num uint32)*tableds.Page{
         }
         pager.Pages[page_num] = page
     }
-
     return pager.Pages[page_num]
 }
 
@@ -314,12 +319,12 @@ func db_close(table *tableds.Table){
 
     for i := 0 ; i < int(num_full_pages) ; i++ {
         if pager.Pages[i] == nil{
+     
             continue
         }
         pager_flush(*pager , uint32(i), PAGE_SIZE)
         pager.Pages[i] = nil
     }
-
     num_additional_rows := table.Num_rows %ROWS_PER_PAGE
     if(num_additional_rows >0){
         page_num := num_full_pages
@@ -379,7 +384,6 @@ type Cursor struct{
     logic:
         print prompt 
         read input
-        
         for everyloop you check 1. if the
     
 */
@@ -390,6 +394,7 @@ func main(){
         os.Exit(1)
     }
     filename := os.Args[1]
+    //a bug in here 
     table := db_open(filename)
     for{
             print_pomt()

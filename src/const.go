@@ -1,5 +1,11 @@
 package main
 
+import "unsafe"
+
+func sizeOfAttribute(Struct interface{} , Attribute interface{})(uint32){
+    return uint32(unsafe.Sizeof(Attribute))
+}
+
 const (
 	PAGE_SIZE uint32 = 4096
     TABLE_MAX_PAGES uint32 = 100
