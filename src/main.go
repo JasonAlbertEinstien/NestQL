@@ -1,14 +1,15 @@
 package main
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/binary"
 	"fmt"
 	"os"
 	"strings"
 	"syscall"
+	"time"
 
+	"nestdb/internal/server"
 	tableds "nestdb/internal/table"
 )
 
@@ -66,7 +67,6 @@ type NodeTree struct{
 }
 
 type Node struct{
-
     is_leaf bool
 }
 //insertion of b tree
@@ -78,7 +78,7 @@ func searchNode(){}
 
 //open the file (if not then create one) --> return a file pointer
 // logic:
-/*
+/*=
    input the file name
    using openfile(filename , os.xxx , ox . xxx , if it's allowing user to delete than it should always be
    0777 if not it's better to be 0666)
@@ -297,22 +297,32 @@ func print_pomt(){
 //Input: ptr of inputbuffer
 //output:
 func read_input(input_Buffer *InputBuffer){
+    /*
     reader := bufio.NewReader(os.Stdin)
     line , err := reader.ReadString('\n')
+
 
     if err != nil{
         fmt.Println("Error Reading Input")
     }
     bytesRead := len(line) -1
+    */
 
-    //fix the input_length , buffer_length , buffer 
+    line, err := server.Server()
+    if err != nil {
+        fmt.Printf("server error")
+    }
+    bytesRead := len(line) 
+    // Fix the input_length, buffer_length, buffer
     input_Buffer.input_length = uint32(bytesRead)
-	input_Buffer.buffer_length = uint32(len(line))
-
-    //The new pointer is representing the type of byte and then make the buffer with byteread
+    input_Buffer.buffer_length = uint32(bytesRead)
+    
+    // The new pointer is representing the type of byte, make the buffer with bytesRead
     input_Buffer.buffer = new([]byte)
     *input_Buffer.buffer = make([]byte, bytesRead)
-	copy(*input_Buffer.buffer, []byte(line)[:bytesRead])
+    
+    // Copy the modified byte slice into the buffer
+    copy(*input_Buffer.buffer, []byte(line)[:bytesRead])
 }
 
 /*
@@ -500,10 +510,15 @@ func main(){
     }
     filename := os.Args[1]
     //a bug in here 
+    
+    //run the tcp server
+    time.Sleep(time.Second)
     table := db_open(filename)
     for{
             print_pomt()
+            //replace this read input function with reading the input from server
             read_input(input_buffer)
+            //*input_buffer.buffer = <- input_server
             if len(*input_buffer.buffer) > 0 && (string(string(*input_buffer.buffer)[0]) == "."){
                 switch(do_meta_command(input_buffer , table)){
                     case(META_COMMAND_SUCCESS):{
