@@ -6,6 +6,8 @@ import (
 	"nestdb/internal/config"
 )
 
+//serializeRow and derserializeRow with binary encoding
+//the return byte is a binary code now
 func Serialize(source *config.Row)([]byte , error){
 	buf := new(bytes.Buffer)
 	err := binary.Write(buf , binary.LittleEndian , source.Id)

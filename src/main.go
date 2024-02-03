@@ -1,8 +1,6 @@
 package main
 
 import (
-	"bytes"
-	"encoding/binary"
 	"fmt"
 	"os"
 	"strings"
@@ -12,6 +10,7 @@ import (
 	config "nestdb/internal/config"
 	server "nestdb/internal/server"
 	"nestdb/internal/table"
+	"nestdb/internal/utils"
 )
 
 //Implementing B-Tree Structure
@@ -72,55 +71,17 @@ type Node struct{
 }
 //insertion of b tree
 func insertNode(){}
+
+func leftRotation(){}
+
+func rightRotation(){}
 //delete of b tree
 func deleteNode(){}
-//search in b tree
+//search in b tree 
+// the algorithm that is used is simiplar to binary tree
 func searchNode(){}
 
 
-
-
-//replace this with db_opne
-
-//serializeRow and derserializeRow with binary encoding
-//the return byte is a binary code now
-func serializeRow(source* config.Row)([]byte , error){
-    buf := new(bytes.Buffer)
-    err := binary.Write(buf , binary.LittleEndian , source.Id)
-    if err != nil {
-        return nil , err
-    }
-    err = binary.Write(buf , binary.LittleEndian , source.Username)
-    if err != nil {
-        return nil , err
-    }
-    err = binary.Write(buf , binary.LittleEndian , source.Email)
-    if err != nil{
-        return nil , err
-    }
-    return buf.Bytes() , nil
-}
-
-//deserializeRow with the given data --> 
-// it will retrive it to  
-func deserializeRow(data []byte)(*config.Row, error){
-    buf := bytes.NewReader(data)
-    destination := &config.Row{}
-    err := binary.Read(buf , binary.LittleEndian , &destination.Id)
-    if err != nil {
-        return nil , err
-    }
-
-    err = binary.Read(buf , binary.LittleEndian , &destination.Username)
-    if err != nil {
-        return nil , err
-    }
-    err = binary.Read(buf , binary.LittleEndian , &destination.Email)
-    if err != nil{
-        return nil , err
-    }
-    return destination, err
-}
 
 
 //so this function will be return 0 if the command is .exit  else return 1
@@ -185,7 +146,7 @@ func execute_insert(statement *config.Statement , table *(config.Table))(config.
 	}
 
     row_to_insert := &(statement.Row_to_insert)
-	data, _ := serializeRow(row_to_insert)
+	data, _ := utils.Serialize(row_to_insert)
 
 	// Get the address of the row
     /*
@@ -226,7 +187,7 @@ func execute_insert(statement *config.Statement , table *(config.Table))(config.
 func execute_select(statement *config.Statement , table *config.Table)(config.ExecuteResult){
     cursor := table_stat(table)
     for cursor.end_of_table != true {
-        data, _ := deserializeRow(cursor_value(cursor))
+        data, _ := utils.Deserialize(cursor_value(cursor))
         cursor_advance(cursor)
         print_row(data)
     }
