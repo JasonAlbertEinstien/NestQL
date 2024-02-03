@@ -28,10 +28,26 @@ Current folder structure
 
 ## To-Do
 Implementation of B+ tree. 
-
+Create Customize Table
 ## Execute
 ```
 go build -o NestQL *.go
-touch nestdb.nestQL
 ./NestQL nestdb.nestQL
 ```
+Then open another terminal
+```
+cd cmd
+python3 client_test.py
+Enter the command: 
+```
+For listing out all data
+```
+select
+```
+For inserting data
+```
+insert (id) (username) (email)
+```
+
+
+
