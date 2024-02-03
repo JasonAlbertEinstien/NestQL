@@ -29,6 +29,15 @@ func NewBPTree() (*BPTree){
 
 func (t *BPTree) Insert(key int){
 	node := t.root
+	if len(node.keys) == 0 {
+		node.keys = append(node.keys, key)
+		return
+	}
+
+	if node.isLeaf{
+		//insert and then sort it based on the key
+	}
+
 }
 
 func main(){
