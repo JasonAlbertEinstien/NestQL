@@ -59,7 +59,22 @@ var LEAF_NODE_SPACE_FOR_CELLS uint32 = PAGE_SIZE - LEAF_NODE_HEADER_SIZE
 var LEAF_NODE_MAX_CELL uint32 = LEAF_NODE_SPACE_FOR_CELLS / LEAF_NODE_CELL_SIZE
 
 //how to access the key with node 
+//how insert is done ?
+//How to tree is form ? 
+type NodeTree struct{
+    node *Node
+}
 
+type Node struct{
+
+    is_leaf bool
+}
+//insertion of b tree
+func insertNode(){}
+//delete of b tree
+func deleteNode(){}
+//search in b tree
+func searchNode(){}
 
 //open the file (if not then create one) --> return a file pointer
 // logic:
