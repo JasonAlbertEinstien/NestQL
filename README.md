@@ -1,13 +1,33 @@
 # NestQL
 
-## introduction
-NestQL is a relationship database that is written for embeded system. Instead of installing server and client , NestQL lightweight but high performance can tackle most of the caeses for IoT and Web-services. Currently it is still under developing mode. The programming language we choose is golang with the reason of providing redis service at the same time in the future.
+## Introduction
+NestQL is a relationship database that is written in golang.
 
 ## Folder Structure
+Current folder structure 
+```
+.
+└── src/
+    ├── cmd/
+    │   └── test_files
+    ├── internal/
+    │   ├── config
+    │   ├── ds
+    │   ├── execution
+    │   ├── meta
+    │   ├── prepare
+    │   ├── query
+    │   ├── server
+    │   ├── storage
+    │   ├── table
+    │   └── utils
+    └── main.go
+```
 
 ## Contribution
 
 ## To-Do
+Implementation of B+ tree. 
 
 ## Execute
 ```
