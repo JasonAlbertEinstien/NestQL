@@ -88,7 +88,7 @@ func searchNode(){}
 func do_meta_command(input_buffer *config.InputBuffer , table *config.Table)(config.MetaCommandResult){
     if(string(*input_buffer.Buffer) == ".exit"){
         db_close(table)
-        println("Thank you for your contribution to nestspace")
+        println("Thank you for your contribution")
         os.Exit(0)
         return config.META_COMMAND_SUCCESS
     }else{
@@ -261,7 +261,7 @@ func read_input(input_Buffer *config.InputBuffer){
 func get_page(pager *config.Pager ,page_num uint32)*config.Page{
     //if page number > the size --> exit the os.exit()
     if(page_num > config.TABLE_MAX_PAGES){
-        fmt.Println("EPIC FAIL YOU TRY TO ACCESS MORE THAN TLBLE MAXPAGE")
+        fmt.Println("TRY TO ACCESS MORE THAN TLBLE MAXPAGE")
         os.Exit(1)
     }   
 //    fmt.Printf("INLOOP")
@@ -444,7 +444,7 @@ func main(){
                         continue
                     }
                     case(config.META_COMMAND_UNRECOGNIZE_COMMAND):{
-                        println("OPPS WRONG META COMMAND")
+                        println("WRONG META COMMAND")
                         continue
                     }
                 }
@@ -455,11 +455,11 @@ func main(){
                     break
                 }
                 case(config.PREPARE_UNRECOGNIZED_STATEMENT):{
-                    println("Bruh your sql is an unrecognized COMMAND")
+                    println("Unrecognized COMMAND")
                     break
                 }
                 case (config.PREPARE_SYNTAX_ERROR):{
-                    println("UMM can you please input correct type and amount of arguments. NESTSPACE IS CRYING :(")
+                    println("Wrong Args or TYPES")
                     break
                 }
             }
