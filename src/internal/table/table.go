@@ -43,3 +43,47 @@ func Pager_open(Filename string)(*config.Pager , error){
 
 	return pager , nil
 }
+
+//get that specific postion from the page
+/*
+    This section have bug ! Please be aware 
+*/
+func Get_page(pager *config.Pager ,page_num uint32)*config.Page{
+    //if page number > the size --> exit the os.exit()
+    if(page_num > config.TABLE_MAX_PAGES){
+        fmt.Println("TRY TO ACCESS MORE THAN TLBLE MAXPAGE")
+        os.Exit(1)
+    }   
+//    fmt.Printf("INLOOP")
+    //if that page is not being fetched before 
+    if(pager.Pages[page_num] == nil){
+        //create a new pointer for one page 
+        page := new(config.Page)
+        num_pages := pager.File_length/config.PAGE_SIZE
+
+        if (pager.File_length % config.PAGE_SIZE != 0){
+            num_pages += 1
+        }
+        if(page_num <= num_pages){
+
+            //bug exit here : 
+            _, err := syscall.Seek(pager.File_descriptor , int64(page_num*config.PAGE_SIZE) , 0)
+            if err != nil{
+                fmt.Printf("ERROR SEEKING FILE \n")
+                os.Exit(1)
+            }
+            //the read and return to the byte
+            bytesRead , err := syscall.Read(pager.File_descriptor , page[:])
+            if err != nil {
+                fmt.Printf("ERROR READING FILE \n")
+                os.Exit(1)
+            }
+            if bytesRead == -1{
+                fmt.Printf("ERROR READING FILE \n")
+                os.Exit(1)
+            }
+        }
+        pager.Pages[page_num] = page
+    }
+    return pager.Pages[page_num]
+}
