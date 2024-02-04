@@ -64,3 +64,8 @@ type Table struct{
 	Num_rows uint32
 	Pager *Pager
 }
+type Cursor struct{
+    Table *Table
+    Row_num uint32
+    End_of_table bool
+}
