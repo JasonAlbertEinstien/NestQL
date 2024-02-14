@@ -56,6 +56,7 @@ type Row struct{
  type Pager struct{
 	File_descriptor int
 	File_length uint32 
+	Num_pages uint32
 	Pages []*Page
 }
 type Page [4096]byte
@@ -63,9 +64,11 @@ type Page [4096]byte
 type Table struct{
 	Num_rows uint32
 	Pager *Pager
+	Root_page_num uint32
 }
 type Cursor struct{
     Table *Table
-    Row_num uint32
     End_of_table bool
+	Page_num uint32
+	Cell_num uint32
 }

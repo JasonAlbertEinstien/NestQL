@@ -9,7 +9,6 @@ import (
 func Table_stat(table *config.Table)(*config.Cursor){
     cursor := &config.Cursor{
         Table: table,
-        Row_num: 0,
         End_of_table: (table.Num_rows == 0),
     }
     return cursor
@@ -19,7 +18,7 @@ func Table_stat(table *config.Table)(*config.Cursor){
 func Table_end(table *config.Table)(*config.Cursor){
     cursor := &config.Cursor{
         Table: table,
-        Row_num: table.Num_rows,   
+        Page_num: table.Root_page_num,  
         End_of_table: true,
     }
     return cursor
@@ -27,7 +26,7 @@ func Table_end(table *config.Table)(*config.Cursor){
 
 //calculate the place for the curosr
 func Cursor_value(cursor *config.Cursor)([]byte){
-    row_num := cursor.Row_num
+    row_num := cursor.Page_num
     page_num := row_num/config.ROWS_PER_PAGE
 
     page := table.Get_page(cursor.Table.Pager , page_num)
@@ -39,8 +38,8 @@ func Cursor_value(cursor *config.Cursor)([]byte){
 }
 
 func Cursor_advance(cursor *config.Cursor){
-    cursor.Row_num += 1 
-    if(cursor.Row_num >= cursor.Table.Num_rows){
+    cursor.Page_num += 1 
+    if(cursor.Page_num >= cursor.Table.Num_rows){
         cursor.End_of_table = true
     }
 }

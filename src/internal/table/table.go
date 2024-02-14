@@ -35,7 +35,13 @@ func Pager_open(Filename string)(*config.Pager , error){
         File_length: uint32(fileLength),
         //remember to make enough space for it if not it will have error
         Pages: make([]*config.Page, config.TABLE_MAX_PAGES),
+        Num_pages: uint32(fileLength)/config.PAGE_SIZE,
 	}
+
+    if uint32(fileLength) % config.PAGE_SIZE != 0{
+        fmt.Println("CORRUPTED FILE")
+        os.Exit(1)
+    }
 
 	for i := 0 ; i<int(config.TABLE_MAX_PAGES);i++{
 		pager.Pages[i] = nil
@@ -50,6 +56,8 @@ func Pager_open(Filename string)(*config.Pager , error){
 */
 func Get_page(pager *config.Pager ,page_num uint32)*config.Page{
     //if page number > the size --> exit the os.exit()
+
+
     if(page_num > config.TABLE_MAX_PAGES){
         fmt.Println("TRY TO ACCESS MORE THAN TLBLE MAXPAGE")
         os.Exit(1)
@@ -84,6 +92,9 @@ func Get_page(pager *config.Pager ,page_num uint32)*config.Page{
             }
         }
         pager.Pages[page_num] = page
+        if (page_num >= pager.Num_pages){
+            pager.Num_pages = page_num + 1
+        }
     }
     return pager.Pages[page_num]
 }

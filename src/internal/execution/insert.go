@@ -19,6 +19,7 @@ func Execute_insert(statement *config.Statement , table *(config.Table))(config.
 
     row_to_insert := &(statement.Row_to_insert)
 	data, _ := utils.Serialize(row_to_insert)
+	//currently the data is set to bee serialize already
 
 	// Get the address of the row
     /*
